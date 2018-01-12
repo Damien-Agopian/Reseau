@@ -3,7 +3,7 @@ from socket import*
 import time
 import threading
 from random import *
-from  kana_py3 import *
+from  dico import *
 import sys
 
 def partition(string):
@@ -82,45 +82,52 @@ class serveur():
 
 	def choix(self,client) :
 		while True :
-			#try :
-				#client.send("Que voulez faire : \n 1 = Jeu 1v1")
+			try :
 				rep = client.recv(1024)
 				print(rep)
 				if rep.decode() == "nouveauHiragana" :
-					print("boucleif")
 					solution = choice(hiragana_)
 					msg = hiragana2[solution] #Envoie d'un nouveau caractère
 					client.send(msg.encode())
-					print(msg)
-					print("done")
+					print("Nouveau hiragana envoyé")
 					reponse = client.recv(1024).decode()
 					print(reponse)
-					#client.send(msg.encode())
-					if reponse == solution :
-						client.send("VRAI".encode())
-					else :
-						client.send(solution.encode())
-				if rep == "nouveauKatakana" :
+					if reponse != 'STOP':
+						if reponse == solution :
+							client.send("VRAI".encode())
+						else :
+							client.send(solution.encode())
+				if rep.decode() == "nouveauKatakana" :
 					solution = choice(katakana_)
-					msg = katakana2[solution] #Envoie d'un nouveau caractère
-					client.send(msg)
-					reponse = client.recv(1024)
-					if reponse == solution :
-						client.send("VRAI".encode())
-					else :
-						client.send(solution.encode())
-#			except socket.error:
-#				print("Erreur cf choix")
-			#finally :
-			#	client.close()
+					msg = katakana2[solution] #Envoi d'un nouveau katakana
+					client.send(msg.encode())
+					print("Nouveau katakana envoyé")
+					reponse = client.recv(1024).decode()
+					print(reponse)
+					if reponse != 'STOP':
+						if reponse == solution :
+							client.send("VRAI".encode())
+						else :
+							client.send(solution.encode())
+				if rep.decode() == "nouveauSigne" :
+					solution = choice(lettre_)
+					msg = lettre_to_signe[solution] #Envoi du nom du fichier image qui correspond au signe
+					client.send(msg.encode())
+					print("Nouveau signe envoyé")
+					reponse = client.recv(1024).decode()
+					print(reponse)
+					if reponse != 'STOP':
+						if reponse == solution :
+							client.send("VRAI".encode())
+						else :
+							client.send(solution.encode())
+			except socket.error:
+				print("Erreur dans choix")
+				
+				
 	def run(self):
-
 		self.serveur.bind((self.host,self.port))
-
 		self.serveur.listen(5)
-
-		
-
 		while True :
 			client , info_client = self.serveur.accept()
 			print ("Connexion de ",info_client[0])
