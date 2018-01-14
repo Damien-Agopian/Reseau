@@ -74,10 +74,9 @@ class serveur():
 		
 		self.joueur_score = [] #On vide la liste
 		self.list_joueur = []
-		client.close()
 		#self.list_client.remove(client)
 		self.list_pseudo.remove(pseudo)
-
+		choix(self,client)
 
 
 	def choix(self,client) :
@@ -87,12 +86,14 @@ class serveur():
 				print(rep)
 				if rep.decode() == "nouveauHiragana" :
 					solution = choice(hiragana_)
-					msg = hiragana2[solution] #Envoie d'un nouveau caractère
+					msg = hiragana2[solution]
 					client.send(msg.encode())
+					#Envoie d'un nouveau Hiragana
 					print("Nouveau hiragana envoyé")
 					reponse = client.recv(1024).decode()
 					print(reponse)
 					if reponse != 'STOP':
+					#Si on recoie 'STOP' c'est que le client change d'exercice
 						if reponse == solution :
 							client.send("VRAI".encode())
 						else :
@@ -121,7 +122,13 @@ class serveur():
 							client.send("VRAI".encode())
 						else :
 							client.send(solution.encode())
-			except socket.error:
+				if rep.decode() == "DECONNECTION" or rep.decode() == "" :
+					"Fermeture de l'application"
+					print("Deconnetion de ",client)
+					self.list_client.remove(client)
+					client.close()
+					break
+			except :#socket.error:
 				print("Erreur dans choix")
 				
 				
@@ -131,7 +138,7 @@ class serveur():
 		while True :
 			client , info_client = self.serveur.accept()
 			print ("Connexion de ",info_client[0])
-			self.list_client.append((client,info_client))
+			self.list_client.append(client)
 			threading.Thread(target = self.choix , args = (client,)).start()
 
 

@@ -265,11 +265,11 @@ class interface:
 		demande_serveur = threading.Thread( target = self.Send, args = (connection,"nouveauHiragana"))
 		demande_serveur.start()
 		demande_serveur.join()
-		print("Hello")
+		
 		thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #reception de l'hiragana
 		thread_recv.start()
 		thread_recv.join()
-		print("done")
+		
 		self.txt4 = tk.Label(self.root, text = self.REPONSE)
 		self.txt4.grid(row = 1, column=2)
 		
@@ -417,4 +417,10 @@ if __name__ == "__main__":
 	connection.connect((host,port))
 
 	print ("Connecte au serveur !")
-	app=interface()
+	try :
+		app=interface()
+	except :
+		print ("Unexpected error:", sys.exc_info()[0])
+	finally :
+		print("Fermeture de l'application, à bientôt !")	
+		connection.send("DECONNECTION".encode())
