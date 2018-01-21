@@ -78,7 +78,60 @@ class serveur():
 		#self.list_client.remove(client)
 		self.list_pseudo.remove(pseudo)
 		choix(self,client)
+		
 
+	def multi_joueur(self,client) :
+	#MINI JEU EN 1 CONTRE 1
+		print ('hello')
+		pseudo = client.recv(1024) #Recoie le pseudo du joueur
+		pseudo = pseudo.decode()
+		print(pseudo)
+		
+		self.list_pseudo.append(pseudo)
+		print(self.list_pseudo)
+		if len(self.list_pseudo) == 1 :
+			client.send("attendre".encode()) 
+			#On dit au client d'attendre un autre joueur
+			attendre = True
+			while attendre == True  :
+				if len(self.list_pseudo) >= 2 :
+					attendre = False
+			client.send("commencer".encode())
+			self.choix(client)
+			
+		elif len(self.list_pseudo) > 2 :
+			client.send("serveur_plein".encode())
+			self.list_pseudo.remove('pseudo')
+			self.choix(client)
+			#On ne peut pas avoir plus de deux joueurs
+			
+		else :
+			
+			client.send("commencer".encode())
+			self.choix(client)
+			
+	def calcul_gagnant(self,client) :
+		#Compare les deux score pour donner un gagnant
+		score = client.recv(1024) #Recoie le pseudo du joueur
+		score = score.decode()
+		self.list_score.append(score)
+		#print(self.list_score)
+		#On empeche le calcul du score tant qu'on a pas recu le 
+		#score des deux joueurs
+		while attendre == True  :
+			if len(self.list_score) >= 2 :
+				attendre = False
+		score_max = max(self.list_score)
+		if score_max == score :
+			client.send("Winner".encode())
+		else :
+			client.send("Loser".endode())
+		
+		self.list_score = []
+		self.list_pseudo = []
+		self.choix(client)
+			
+		
 
 
 	def choix(self,client) :
@@ -122,6 +175,14 @@ class serveur():
 							client.send("VRAI".encode())
 						else :
 							client.send(solution.encode())
+				if rep.decode() == "multi_hira" :
+					print (rep.decode())
+					self.multi_joueur(client)
+				if rep.decode() == "score" :
+					print(rep.decode())
+					print("Score ?")
+					self.calcul_gagnant(client)
+							
 				if rep.decode() == "DECONNECTION" or rep.decode() == "" :
 					"Fermeture de l'application"
 					print("Deconnetion de ",client)

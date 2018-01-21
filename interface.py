@@ -127,20 +127,29 @@ class interface:
 			self.entr1.grid(row=2, column=2)
 			self.bout1.grid(row=2, column=3, padx =20)
 			print('Jeu en solo de langue des signes')
-		elif name=='japonnais_entrainement_hira':
+		elif name=='japonais_entrainement_hira':
 			self.txt1 = tk.Label(self.root, text ='Convertir le hiragana suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
 			self.caractere = tk.StringVar()
 			self.entr1 = tk.Entry(self.root, textvariable=self.caractere)
-			self.bout1 = tk.Button(self.root, text="Commencer", command=self.entrainementKata)
+			self.bout1 = tk.Button(self.root, text="Commencer", command=self.entrainementHira)
 			self.txt1.grid(row =1, column=1, pady=50)
 			self.txt2.grid(row =2, column=1)
 			self.txt3.grid(row = 5, column=1, columnspan=4, pady=50)
 			self.entr1.grid(row=2, column=2)
 			self.bout1.grid(row=2, column=3)
 			print('Entrainement hiragana : traduire le plus de caractères en un temps donné')
-		elif name=='japonnais_entrainement_kata':
+		elif name=='japonais_jeu_hiragana':
+			self.txt1 = tk.Label(self.root, text ='Votre pseudo :')
+			self.pseudo = tk.StringVar()
+			self.entr1 = tk.Entry(self.root, textvariable=self.pseudo)
+			self.bout1 = tk.Button(self.root, text="Valider", command=self.miniJeuHira)
+			self.txt1.grid(row =1, column=1, pady=50)
+			self.entr1.grid(row=1, column=2)
+			self.bout1.grid(row=1, column=3)
+			print('Mini jeu en ligne hiragana : Soyez meilleur que les autres joueurs !')
+		elif name=='japonais_entrainement_kata':
 			self.txt1 = tk.Label(self.root, text ='Convertir le katakana suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
@@ -153,7 +162,7 @@ class interface:
 			self.entr1.grid(row=2, column=2)
 			self.bout1.grid(row=2, column=3)
 			print('Entrainement katagana : traduire le plus de caractères en un temps donné')
-		elif name=='japonnais_hiragana':
+		elif name=='japonais_hiragana':
 			self.txt1 = tk.Label(self.root, text ='Convertir le hiragana suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
@@ -167,7 +176,7 @@ class interface:
 			self.bout1.grid(row=2, column=3)
 			print('Exercice 1 : convertir les hiragana.')
 			self.nouveauHiragana()
-		elif name=='japonnais_katakana':
+		elif name=='japonais_katakana':
 			self.txt1 = tk.Label(self.root, text ='Convertir le katakana suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
@@ -294,9 +303,80 @@ class interface:
 			self.nouveauSigne()
 		
 	#=============================================================#
-	#                    Hira                                     #
+	#                    Hiragana                                 #
 	#=============================================================#
 	
+	def miniJeuHira(self):
+		demande_serveur = threading.Thread(target = self.Send, args = (connection,'multi_hira'))
+		demande_serveur.start()
+		demande_serveur.join()
+		#envoi du pseudo
+		self.pseudo = self.entr1.get()
+		if len(self.pseudo)!=0 :
+			demande_serveur = threading.Thread(target = self.Send, args = (connection,self.pseudo))
+			demande_serveur.start()
+			demande_serveur.join()
+			print("Pseudo envoyé")
+			thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #reception de l'ordre (attendre ou commencer)
+			thread_recv.start()
+			thread_recv.join()
+			if self.REPONSE == 'commencer':
+				print('Commencer le jeu')
+				self.jeuHira()
+			elif self.REPONSE == 'attendre':
+				print('Attente de joueur')
+				for c in self.root.winfo_children(): #nettoie la fenetre
+					c.destroy()
+				self.txt1 = tk.Label(self.root, text ='En attente d\'un adversaire...')
+				self.txt1.grid(row =1, column=1, pady=50)
+				self.menu()
+				thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #reception de l'ordre (attendre ou commencer)
+				thread_recv.start()
+				thread_recv.join()
+				if self.REPONSE == 'commencer':
+					print('Commencer le jeu')
+					self.jeuHira()
+			elif self.REPONSE =='serveur_plein':
+				for c in self.root.winfo_children(): #nettoie la fenetre
+					c.destroy()
+				self.menu()
+				self.txt1 = tk.Label(self.root, text ='Le serveur est occupé, veuillez réessayer plus tard.')
+				self.txt1.grid(row =1, column=1, pady=50)
+				
+	def jeuHira(self):
+		for c in self.root.winfo_children(): #nettoie la fenetre
+			c.destroy()
+		self.menu()
+		self.txt1 = tk.Label(self.root, text ='Convertir le hiragana suivant :')
+		self.txt2 = tk.Label(self.root, text='Votre réponse :')
+		self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
+		self.caractere = tk.StringVar()
+		self.entr1 = tk.Entry(self.root, textvariable=self.caractere)
+		self.bout1 = tk.Button(self.root, text="Commencer", command=self.entrainementHira)
+		self.txt1.grid(row =1, column=1, pady=50)
+		self.txt2.grid(row =2, column=1)
+		self.txt3.grid(row = 5, column=1, columnspan=4, pady=50)
+		self.entr1.grid(row=2, column=2)
+		self.bout1.grid(row=2, column=3)
+		self.entrainementHira()
+		if time.time() > self.endTime :
+			print("temps écoulé")
+			score = self.vrai
+			demande_serveur = threading.Thread(target = self.Send, args = (connection,'score')) #envoi du score
+			demande_serveur.start()
+			demande_serveur.join()
+			print("score send")
+			demande_serveur = threading.Thread(target = self.Send, args = (connection,str(score)))
+			demande_serveur.start()
+			demande_serveur.join()
+			thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #réception du résultat
+			thread_recv.start()
+			thread_recv.join()
+			if self.REPONSE == 'Winner':
+				self.txt33.config(text ="Gagné !", fg='green')
+			else :
+				self.txt33.config(text ="Perdu...", fg='red')
+
 	
 	def nouveauHiragana(self):
 		demande_serveur = threading.Thread( target = self.Send, args = (connection,"nouveauHiragana"))
@@ -335,22 +415,22 @@ class interface:
 					self.txt5.grid(row=4, column =2)
 			self.nouveauHiragana()
 	
-		def entrainementHira(self):
-			self.bout1.destroy()
-			#supprimer les réponses précédentes
-			try : 
-				self.txt3.delete(0.0, tk.END)
-				self.txt33.delete(0.0, tk.END)
-			except :
-				print("Premier jeu : pas de réponses à effacer.")
-			#printer l'interface
-			self.vrai = 0 #nombre de réponses justes/fausses
-			self.faux = 0
-			self.nouveauHiragana()
-			self.endTime = time.time() + 10 #le jeu dure 10 secondes
-			self.entr1.event_add('<<Return>>', '<KeyPress - Return>')
-			self.entr1.bind('<<Return>>', self.nouveauHiraJeu)
-	
+	def entrainementHira(self):
+		self.bout1.destroy()
+		#supprimer les réponses précédentes
+		try : 
+			self.txt3.delete(0.0, tk.END)
+			self.txt33.delete(0.0, tk.END)
+		except :
+			print("Premier jeu : pas de réponses à effacer.")
+		#printer l'interface
+		self.vrai = 0 #nombre de réponses justes/fausses
+		self.faux = 0
+		self.nouveauHiragana()
+		self.endTime = time.time() + 10 #le jeu dure 10 secondes
+		self.entr1.event_add('<<Return>>', '<KeyPress - Return>')
+		self.entr1.bind('<<Return>>', self.nouveauHiraJeu)
+
 	def nouveauHiraJeu(self, event):
 		reponse = self.entr1.get()
 		#Demande de correction au serveur
@@ -373,7 +453,7 @@ class interface:
 			print('Fin du temps')
 			self.txt33 = tk.Label(self.root, text ="Fin du temps !", fg='red')
 			self.txt33.grid(row =4, column=2, pady=10)
-			info_serveur = threading.Thread( target = self.Send, args = (connection,"STOP")) #permet de débloquer le serveur en attente de la réponse du joueur
+			info_serveur = threading.Thread( target = self.Send, args = (connection,"TEMPS_ECOULE")) #permet de débloquer le serveur en attente de la réponse du joueur
 			info_serveur.start()
 			info_serveur.join()
 			self.bout1 = tk.Button(self.root, text="Commencer", command=self.entrainementHira)
@@ -384,7 +464,7 @@ class interface:
 
 	
 	#=============================================================#
-	#                     Kata                                    #
+	#                     Katakana                                #
 	#=============================================================#
 	
 	
@@ -479,7 +559,7 @@ class interface:
 			self.fenetre(text)
 			self.menu()
 		except:
-			print ("Unexpected error:", sys.exc_info()[0])
+			print ("Unexpected error in change:", sys.exc_info())#[0])
 			self.fenetre('accueil')
 			self.menu()	
 	
@@ -501,15 +581,15 @@ class interface:
 		menubar.add_cascade(label="Accueil", menu=menu0)
 
 		menu1 = tk.Menu(menubar, tearoff=0)
-		menu1.add_command(label="Exercice Hiragana", command=lambda text='japonnais_hiragana': self.change(text))
-		menu1.add_command(label="Entrainement Hiragana", command=lambda text='japonnais_entrainement_hira': self.change(text))
-		menu1.add_command(label="Jeu Hiragana", command=lambda text='japonnais_jeu_hiragana': self.change(text))
+		menu1.add_command(label="Exercice Hiragana", command=lambda text='japonais_hiragana': self.change(text))
+		menu1.add_command(label="Entrainement Hiragana", command=lambda text='japonais_entrainement_hira': self.change(text))
+		menu1.add_command(label="Jeu Hiragana", command=lambda text='japonais_jeu_hiragana': self.change(text))
 		
 		menu1.add_separator()
-		menu1.add_command(label="Exercice Katakana", command=lambda text='japonnais_katakana': self.change(text))
-		menu1.add_command(label="Entrainement Katakana", command=lambda text='japonnais_entrainement_kata': self.change(text))
-		menu1.add_command(label="Jeu Katakana", command=lambda text='japonnais_jeu_katakana': self.change(text))
-		menubar.add_cascade(label="Japonnais", menu=menu1)
+		menu1.add_command(label="Exercice Katakana", command=lambda text='japonais_katakana': self.change(text))
+		menu1.add_command(label="Entrainement Katakana", command=lambda text='japonais_entrainement_kata': self.change(text))
+		menu1.add_command(label="Jeu Katakana", command=lambda text='japonais_jeu_katakana': self.change(text))
+		menubar.add_cascade(label="Japonais", menu=menu1)
 
 		menu2 = tk.Menu(menubar, tearoff=0)
 		menu2.add_command(label="Alphabet", command=lambda text='LDS_alphabet_cours': self.change(text))
@@ -563,7 +643,7 @@ if __name__ == "__main__":
 	try :
 		app=interface()
 	except :
-		print ("Unexpected error:", sys.exc_info()[0])
+		print ("Unexpected error in main :", sys.exc_info()[0])
 	finally :
 		print("Fermeture de l'application, à bientôt !")	
 		connection.send("DECONNECTION".encode()) 
