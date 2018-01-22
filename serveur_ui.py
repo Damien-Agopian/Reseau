@@ -25,8 +25,8 @@ class serveur():
 		self.serveur = socket(AF_INET,SOCK_STREAM)
 		self.serveur.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
 
-		self.host = ""
-		self.port = 8000
+		#self.host = ""
+		#self.port = 8000
 
 		self.list_client = []
 		self.list_joueur = []
@@ -194,7 +194,14 @@ class serveur():
 				
 				
 	def run(self):
-		self.serveur.bind((self.host,self.port))
+		host = ""
+		try :
+			port = int(sys.argv[1])
+			print ("Ecoute sur le port %s"%port)
+		except :
+			port = 8000
+			print ("Ecoute sur le port %s (valeur par défault)"%port)
+		self.serveur.bind((host,port))
 		self.serveur.listen(5)
 		while True :
 			client , info_client = self.serveur.accept()

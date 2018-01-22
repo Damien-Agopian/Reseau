@@ -613,9 +613,13 @@ if __name__ == "__main__":
 	#création du socket
 	connection = socket(AF_INET,SOCK_STREAM)
 	connection.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+	try :
+		host = sys.argv[1]
+		port = int(sys.argv[2])
+	except :
+		host = "localhost"
+		port = 8000
 	#connection au serveur
-	host="localhost"
-	port=8000
 	connection.connect((host,port))
 	print ("Connecte au serveur !")
 	try : #lancement de l'application
