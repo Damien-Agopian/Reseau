@@ -629,3 +629,5 @@ if __name__ == "__main__":
 	finally :  #déconnection 
 		print("Fermeture de l'application, à bientôt !")	
 		connection.send("DECONNECTION".encode()) 
+		connection.shutdown(1)
+		connection.close()

@@ -3,7 +3,7 @@ from socket import*
 import time
 import threading
 from random import *
-from  dico import *
+from  dico import * #Les dictionnaires contenant les caractères japonais
 import sys
 
 def partition(string):
@@ -187,10 +187,12 @@ class serveur():
 					"Fermeture de l'application"
 					print("Deconnetion de ",client)
 					self.list_client.remove(client)
+					client.shutdown(0)
 					client.close()
 					break
 			except : #socket.error:
 				print("Erreur dans choix")
+				break
 				
 				
 	def run(self):
@@ -205,7 +207,7 @@ class serveur():
 		self.serveur.listen(5)
 		while True :
 			client , info_client = self.serveur.accept()
-			#print ("Connexion de ",info_client[0])
+			print ("Connexion de ",info_client[0])
 			self.list_client.append(client)
 			self.list_client.append((client,info_client))
 			threading.Thread(target = self.choix , args = (client,)).start()
