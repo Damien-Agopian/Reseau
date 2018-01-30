@@ -152,6 +152,7 @@ class interface:
 			print('Exercice de langue des signes')
 			self.nouveau_signe()
 		elif name == 'jeu_solo_LDS':
+			self.jeu = 'solo'	
 			self.txt1 = tk.Label(self.root, text ='Trouver la lettre correspondant au signe suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt22 = tk.Label(self.root, text='Veuillez répondre en lettres minuscules.')
@@ -167,6 +168,7 @@ class interface:
 			self.bout1.grid(row=2, column=3, padx =20)
 			print('Jeu en solo de langue des signes')
 		elif name=='japonais_entrainement_hira':
+			self.jeu = 'solo'	
 			self.txt1 = tk.Label(self.root, text ='Convertir le hiragana suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
@@ -180,6 +182,7 @@ class interface:
 			self.bout1.grid(row=2, column=3)
 			print('Entrainement hiragana : traduire le plus de caractères en un temps donné')
 		elif name=='japonais_jeu_hiragana':
+			self.jeu = 'multi'	
 			self.txt1 = tk.Label(self.root, text ='Votre pseudo :')
 			self.pseudo = tk.StringVar()
 			self.entr1 = tk.Entry(self.root, textvariable=self.pseudo)
@@ -189,6 +192,7 @@ class interface:
 			self.bout1.grid(row=1, column=3)
 			print('Mini jeu en ligne hiragana : Soyez meilleur que les autres joueurs !')
 		elif name=='japonais_jeu_katakana':
+			self.jeu = 'multi'	
 			self.txt1 = tk.Label(self.root, text ='Votre pseudo :')
 			self.pseudo = tk.StringVar()
 			self.entr1 = tk.Entry(self.root, textvariable=self.pseudo)
@@ -198,6 +202,7 @@ class interface:
 			self.bout1.grid(row=1, column=3)
 			print('Mini jeu en ligne katakana : Soyez meilleur que les autres joueurs !')
 		elif name=='LDS_jeu':
+			self.jeu = 'multi'	
 			self.txt1 = tk.Label(self.root, text ='Votre pseudo :')
 			self.pseudo = tk.StringVar()
 			self.entr1 = tk.Entry(self.root, textvariable=self.pseudo)
@@ -207,6 +212,7 @@ class interface:
 			self.bout1.grid(row=1, column=3)
 			print('Mini jeu en ligne LDS : Soyez meilleur que les autres joueurs !')
 		elif name=='japonais_entrainement_kata':
+			self.jeu = 'solo'
 			self.txt1 = tk.Label(self.root, text ='Convertir le katakana suivant :')
 			self.txt2 = tk.Label(self.root, text='Votre réponse :')
 			self.txt3 = tk.Label(self.root, text ='Pour toute réclamation veuillez contacter le service après vente : damien.agopian@insa-lyon.fr')
@@ -335,6 +341,9 @@ class interface:
 				self.faux += 1
 			print ("vrai : ", self.vrai, "      faux : ", self.faux) #affichage du score au fur et à mesure
 			self.nouveau_signe() #demande au serveur et affichage du nouvau signe
+			txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #Affichage du score final
+			self.txt3 = tk.Label(self.root, text =txt)
+			self.txt3.grid(row =3, column=2, pady=10)
 		elif time.time() >= self.endTime : #Si le temps est écoulé
 			print('Fin du temps')
 			self.txt33 = tk.Label(self.root, text ="Fin du temps !", fg='red')
@@ -344,9 +353,6 @@ class interface:
 			info_serveur.join()
 			self.bout1 = tk.Button(self.root, text="Commencer", command=self.jeu_solo_LDS) #On remet le bouton qui permet de débuter le jeu
 			self.bout1.grid(row=2, column=3)
-			"""thread_correction = threading.Thread(target = self.Recv, args = (connection,)) #stockage inutile de la correction que le serveur envoie même si on a fini le jeu
-			thread_correction.start() 
-			thread_correction.join()"""
 			if self.jeu == 'multi' :
 				print ('fin du temps jeu multi')
 				try :
@@ -378,19 +384,21 @@ class interface:
 					self.txt3 = tk.Label(text ="Perdu...", fg='red', )
 					self.txt3.grid(row=1, column=1)
 				self.jeu = 'solo'
-		"""txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #Affichage du score final
-		self.txt3 = tk.Label(self.root, text =txt)
-		self.txt3.grid(row =3, column=2, pady=10)"""
+			"""else :
+				thread_correction = threading.Thread(target = self.Recv, args = (connection,)) #stockage inutile de la correction que le serveur envoie même si on a fini le jeu
+				thread_correction.start() 
+				thread_correction.join()"""
 
 		
 	def jeu_solo_LDS(self):
 		#supprimer les réponses précédentes
 		self.bout1.destroy()
 		try : 
-			self.txt3.delete(0.0, tk.END)
-			self.txt33.delete(0.0, tk.END)
+			self.txt3.config(text = "")
+			self.txt33.config(text = "")
 		except :
-			print("Premier jeu : pas de réponses à effacer.")
+			print("Erreur lors de l'effacement du score ou premier jeu : pas de réponses à effacer.")
+			print ("Unexpected error in change:", sys.exc_info())
 		self.vrai = 0 #nombre de réponses justes/fausses
 		self.faux = 0
 		self.nouveau_signe() #demande au serveur et affichage du nouvau signe
@@ -462,7 +470,7 @@ class interface:
 		self.entr1.grid(row=2, column=2)
 		self.bout1.grid(row=2, column=3)
 		self.jeu_solo_LDS() #utilisation de la même fonction que le jeux en solitaire
-		print('time.time() = ', time.time())
+		#print('time.time() = ', time.time())
 		print('timeEnd = ', self.endTime)
 
 
@@ -529,40 +537,132 @@ class interface:
 		self.entr1.bind('<<Return>>', self.nouveau_hira_jeu)
 
 	def nouveau_hira_jeu(self, event):
-		reponse = self.entr1.get() #Réponse de l'utilisateur
-		#Demande de correction au serveur
-		if len(reponse) != 0 and time.time()<self.endTime : #si l'utilisateur a vraiment entré une réponse
-			#Envoie de la réponse de l'utilisateur
+		reponse = self.entr1.get() #réponse de l'utilisateur
+		if len(reponse) != 0 and time.time()<self.endTime : #si le client a répondu et que le temps n'est pas écoulé
+			#Demande de correction au serveur
 			thread_reponse=threading.Thread(target = self.Send, args = (connection,reponse))
 			thread_reponse.start()
 			thread_reponse.join()
-			correction = self.REPONSE #Correction
+			#Réception de la correction
+			correction = self.REPONSE #Stock la le nom du fichier envoyé par le serveur
 			thread_correction = threading.Thread(target = self.Recv, args = (connection,))
 			thread_correction.start()
 			thread_correction.join()
-			if (self.REPONSE=='VRAI'):  #Traitement de la correction
+			#Incrémentation des réponses 
+			if (self.REPONSE=='VRAI'):
 				self.vrai += 1
 			else :
 				self.faux += 1
-			print ("vrai : ", self.vrai, "      faux : ", self.faux)
-			self.nouveau_hira() #demande au serveur et affichage du nouvau hiragana			
-		elif time.time() >= self.endTime : #Si le temps est fini
+			print ("vrai : ", self.vrai, "      faux : ", self.faux) #affichage du score au fur et à mesure
+			self.nouveau_hira() #demande au serveur et affichage du nouvau signe
+			txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #Affichage du score final
+			self.txt3 = tk.Label(self.root, text =txt)
+			self.txt3.grid(row =3, column=2, pady=10)
+		elif time.time() >= self.endTime : #Si le temps est écoulé
 			print('Fin du temps')
 			self.txt33 = tk.Label(self.root, text ="Fin du temps !", fg='red')
 			self.txt33.grid(row =4, column=2, pady=10)
-			info_serveur = threading.Thread( target = self.Send, args = (connection,"TEMPS_ECOULE")) #permet de débloquer le serveur en attente de la réponse du joueur
+			info_serveur = threading.Thread( target = self.Send, args = (connection,"STOP")) #permet de débloquer le serveur en attente de la réponse du joueur
 			info_serveur.start()
 			info_serveur.join()
-			self.REPONSE = None
-			self.bout1 = tk.Button(self.root, text="Commencer", command=self.jeu_solo_hira) #On remet le bouton 'Commencer'
+			self.bout1 = tk.Button(self.root, text="Commencer", command=self.jeu_solo_hira) #On remet le bouton qui permet de débuter le jeu
 			self.bout1.grid(row=2, column=3)
-			thread_correction = threading.Thread(target = self.Recv, args = (connection,)) #stockage inutile de la correction que le serveur envoie même si on a fini le jeu
-			thread_correction.start()
-			thread_correction.join()			
-		txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #affichage du score
-		self.txt3 = tk.Label(self.root, text =txt)
-		self.txt3.grid(row =3, column=2, pady=10)
+			if self.jeu == 'multi' :
+				print ('fin du temps jeu multi')
+				try :
+					score = self.vrai #envoie du score
+					demande_serveur = threading.Thread(target = self.Send, args = (connection,'score')) 
+					demande_serveur.start()
+					demande_serveur.join()
+					demande_serveur = threading.Thread(target = self.Send, args = (connection,str(score)))
+					demande_serveur.start()
+					demande_serveur.join()
+					print('score envoyé')
+				except :
+					print ("Erreur dans l'envoi du score:", sys.exc_info())
+				try :
+					thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #réception du résultat
+					thread_recv.start()
+					thread_recv.join()
+					print('réception du classement')
+					print('résultat : ', self.REPONSE)
+				except :
+					print ("Erreur dans la réception du classement:", sys.exc_info())
+				for c in self.root.winfo_children(): #nettoie la fenetre
+					c.destroy()
+				self.menu()
+				if self.REPONSE == 'Winner': #traiement du résultat
+					self.txt3 = tk.Label(self.root, text ="Gagné !", fg='green')
+					self.txt3.grid(row=1, column=1)
+				else :
+					self.txt3 = tk.Label(text ="Perdu...", fg='red', )
+					self.txt3.grid(row=1, column=1)
+				self.jeu = 'solo'
 
+	def nouveau_signe_hira(self, event):
+		reponse = self.entr1.get() #réponse de l'utilisateur
+		if len(reponse) != 0 and time.time()<self.endTime : #si le client a répondu et que le temps n'est pas écoulé
+			#Demande de correction au serveur
+			thread_reponse=threading.Thread(target = self.Send, args = (connection,reponse))
+			thread_reponse.start()
+			thread_reponse.join()
+			#Réception de la correction
+			correction = self.REPONSE #Stock la le nom du fichier envoyé par le serveur
+			thread_correction = threading.Thread(target = self.Recv, args = (connection,))
+			thread_correction.start()
+			thread_correction.join()
+			#Incrémentation des réponses 
+			if (self.REPONSE=='VRAI'):
+				self.vrai += 1
+			else :
+				self.faux += 1
+			print ("vrai : ", self.vrai, "      faux : ", self.faux) #affichage du score au fur et à mesure
+			self.nouveau_hira() #demande au serveur et affichage du nouvau signe
+			txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #Affichage du score final
+			self.txt3 = tk.Label(self.root, text =txt)
+			self.txt3.grid(row =3, column=2, pady=10)
+		elif time.time() >= self.endTime : #Si le temps est écoulé
+			print('Fin du temps')
+			self.txt33 = tk.Label(self.root, text ="Fin du temps !", fg='red')
+			self.txt33.grid(row =4, column=2, pady=10)
+			info_serveur = threading.Thread( target = self.Send, args = (connection,"STOP")) #permet de débloquer le serveur en attente de la réponse du joueur
+			info_serveur.start()
+			info_serveur.join()
+			self.bout1 = tk.Button(self.root, text="Commencer", command=self.jeu_solo_hira) #On remet le bouton qui permet de débuter le jeu
+			self.bout1.grid(row=2, column=3)
+			if self.jeu == 'multi' :
+				print ('fin du temps jeu multi')
+				try :
+					score = self.vrai #envoie du score
+					demande_serveur = threading.Thread(target = self.Send, args = (connection,'score')) 
+					demande_serveur.start()
+					demande_serveur.join()
+					demande_serveur = threading.Thread(target = self.Send, args = (connection,str(score)))
+					demande_serveur.start()
+					demande_serveur.join()
+					print('score envoyé')
+				except :
+					print ("Erreur dans l'envoi du score:", sys.exc_info())
+				try :
+					thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #réception du résultat
+					thread_recv.start()
+					thread_recv.join()
+					print('réception du classement')
+					print('résultat : ', self.REPONSE)
+				except :
+					print ("Erreur dans la réception du classement:", sys.exc_info())
+				for c in self.root.winfo_children(): #nettoie la fenetre
+					c.destroy()
+				self.menu()
+				if self.REPONSE == 'Winner': #traiement du résultat
+					self.txt3 = tk.Label(self.root, text ="Gagné !", fg='green')
+					self.txt3.grid(row=1, column=1)
+				else :
+					self.txt3 = tk.Label(text ="Perdu...", fg='red', )
+					self.txt3.grid(row=1, column=1)
+				self.jeu = 'solo'
+
+				
 	def jeu_multi_hira(self):
 		"""
 		Mini jeu à deux joueurs
@@ -587,19 +687,14 @@ class interface:
 			thread_recv.join()
 			if self.REPONSE == 'commencer': #si il y avait déjà un advairsaire 
 				print('Commencer le jeu')
-				self.jeu_multi_hira_interface()
+				self.jeu_multi_kata_interface()
 			elif self.REPONSE == 'attendre': #on doit attendre l'arrivée d'un adversaire
 				print('Attente de joueur')
 				for c in self.root.winfo_children(): #nettoie la fenetre
 					c.destroy()
-				print('fenêtre nettoyée')
 				self.txt1 = tk.Label(self.root, text ='En attente d\'un adversaire...')
 				self.txt1.grid(row =1, column=1, pady=50)
 				self.menu()
-				print('texte affiché')
-				time.sleep(10)
-				print('attente pour permettre l\'affichage du message')
-				"""IL N'AFFICHE PAS AVANT D'ATTENDRE LA REPONSE DU SERVEUR..."""
 				thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #reception de l'ordre (attendre ou commencer)
 				thread_recv.start()
 				thread_recv.join()
@@ -640,10 +735,10 @@ class interface:
 			thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #réception du résultat
 			thread_recv.start()
 			thread_recv.join()
-			if self.REPONSE == 'Winner': #traiement du résultat
+			"""if self.REPONSE == 'Winner': #traiement du résultat
 				self.txt3.config(text ="Gagné !", fg='green')
 			else :
-				self.txt3.config(text ="Perdu...", fg='red')
+				self.txt3.config(text ="Perdu...", fg='red')"""
 				
 				
 	#=============================================================#
@@ -702,48 +797,78 @@ class interface:
 		self.entr1.bind('<<Return>>', self.nouveau_kata_jeu)
 	
 	def nouveau_kata_jeu(self, event):
-		reponse = self.entr1.get()
-		#Demande de correction au serveur
-		if len(reponse) != 0 and time.time()<self.endTime : #self.repondre==True:
+		reponse = self.entr1.get() #réponse de l'utilisateur
+		if len(reponse) != 0 and time.time()<self.endTime : #si le client a répondu et que le temps n'est pas écoulé
+			#Demande de correction au serveur
 			thread_reponse=threading.Thread(target = self.Send, args = (connection,reponse))
 			thread_reponse.start()
 			thread_reponse.join()
-			correction = self.REPONSE #Stock la caractère katakana (à traduire) envoyé par le serveur
+			#Réception de la correction
+			correction = self.REPONSE #Stock la le nom du fichier envoyé par le serveur
 			thread_correction = threading.Thread(target = self.Recv, args = (connection,))
 			thread_correction.start()
 			thread_correction.join()
+			#Incrémentation des réponses 
 			if (self.REPONSE=='VRAI'):
 				self.vrai += 1
 			else :
 				self.faux += 1
-			print ("vrai : ", self.vrai, "      faux : ", self.faux)
-			self.nouveau_kata() 
-		else :
+			print ("vrai : ", self.vrai, "      faux : ", self.faux) #affichage du score au fur et à mesure
+			self.nouveau_kata() #demande au serveur et affichage du nouvau signe
+			txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #Affichage du score final
+			self.txt3 = tk.Label(self.root, text =txt)
+			self.txt3.grid(row =3, column=2, pady=10)
+		elif time.time() >= self.endTime : #Si le temps est écoulé
 			print('Fin du temps')
 			self.txt33 = tk.Label(self.root, text ="Fin du temps !", fg='red')
 			self.txt33.grid(row =4, column=2, pady=10)
 			info_serveur = threading.Thread( target = self.Send, args = (connection,"STOP")) #permet de débloquer le serveur en attente de la réponse du joueur
 			info_serveur.start()
 			info_serveur.join()
-			self.bout1 = tk.Button(self.root, text="Commencer", command=self.jeu_solo_kata) #remet le bouton 'commencer'
+			self.bout1 = tk.Button(self.root, text="Commencer", command=self.jeu_solo_kata) #On remet le bouton qui permet de débuter le jeu
 			self.bout1.grid(row=2, column=3)
-			thread_correction = threading.Thread(target = self.Recv, args = (connection,)) #stockage inutile de la correction que le serveur envoie même si on a fini le jeu
-			thread_correction.start()
-			thread_correction.join()			
-		txt = "Score : " + str(self.vrai) + "/" + str(self.vrai+self.faux) #affichage du score
-		self.txt3 = tk.Label(self.root, text =txt)
-		self.txt3.grid(row =3, column=2, pady=10)
+			if self.jeu == 'multi' :
+				print ('fin du temps jeu multi')
+				try :
+					score = self.vrai #envoie du score
+					demande_serveur = threading.Thread(target = self.Send, args = (connection,'score')) 
+					demande_serveur.start()
+					demande_serveur.join()
+					demande_serveur = threading.Thread(target = self.Send, args = (connection,str(score)))
+					demande_serveur.start()
+					demande_serveur.join()
+					print('score envoyé')
+				except :
+					print ("Erreur dans l'envoi du score:", sys.exc_info())
+				try :
+					thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #réception du résultat
+					thread_recv.start()
+					thread_recv.join()
+					print('réception du classement')
+					print('résultat : ', self.REPONSE)
+				except :
+					print ("Erreur dans la réception du classement:", sys.exc_info())
+				for c in self.root.winfo_children(): #nettoie la fenetre
+					c.destroy()
+				self.menu()
+				if self.REPONSE == 'Winner': #traiement du résultat
+					self.txt3 = tk.Label(self.root, text ="Gagné !", fg='green')
+					self.txt3.grid(row=1, column=1)
+				else :
+					self.txt3 = tk.Label(text ="Perdu...", fg='red', )
+					self.txt3.grid(row=1, column=1)
+				self.jeu = 'solo'
 		
 		
 	def jeu_multi_kata(self):
 		"""
 		Mini jeu à deux joueurs
 		Le serveur attend d'avoir deux clients qui se connectent pour leur donner le top départ.
-		Les deux joueurs ont 10 sec pour traduire un maximum de hiragana
+		Les deux joueurs ont 10 sec pour traduire un maximum de katakana
 		A la fin du temps chaque joueur envoie son score (nombre de bonnes réponses)
 		Le serveur envoie le résultat ('gagant' ou 'perdant')
 		"""
-		#Prévient le serveur qu'on va jouer en ligne au jeu hiragana
+		#Prévient le serveur qu'on va jouer en ligne au jeu katakana
 		demande_serveur = threading.Thread(target = self.Send, args = (connection,'multi_kata'))
 		demande_serveur.start()
 		demande_serveur.join()
@@ -807,10 +932,10 @@ class interface:
 			thread_recv = threading.Thread(target = self.Recv, args = (connection,)) #réception du résultat
 			thread_recv.start()
 			thread_recv.join()
-			if self.REPONSE == 'Winner': #traiement du résultat
+			"""if self.REPONSE == 'Winner': #traiement du résultat
 				self.txt33.config(text ="Gagné !", fg='green')
 			else :
-				self.txt33.config(text ="Perdu...", fg='red')
+				self.txt33.config(text ="Perdu...", fg='red')"""
 			
 
  
