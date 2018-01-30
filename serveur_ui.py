@@ -87,6 +87,7 @@ class serveur():
 			while attendre == True  :
 				if len(self.list_pseudo) >= 2 :
 					attendre = False
+					self.list_score = []
 			client.send("commencer".encode())
 			self.choix(client)
 			
@@ -103,27 +104,32 @@ class serveur():
 			
 	# Compare les deux score pour donner un gagnant
 	def calcul_gagnant(self,client) :
-		print('attente de réception du score')
-		score = client.recv(1024)  # Recoit le pseudo du joueur
-		score = score.decode()
-		print('score recu :', score)
-		self.list_score.append(score)
-		# print(self.list_score)
-		# Pas de calcul du score tant qu'on n'a pas recu le score des 2 joueurs
-		while attendre == True  :
-			print("attente du second score")
-			if len(self.list_score) >= 2 :
-				print("second score reçu !")
-				attendre = False
-		score_max = max(self.list_score)
-		if score_max == score :
-			client.send("Winner".encode())
-		else :
-			client.send("Loser".endode())
+		try :
+			print('attente de réception du score')
+			score = client.recv(1024)  # Recoit le pseudo du joueur
+			score = score.decode()
+			print('score recu :', score)
+			self.list_score.append(score)
+			print('liste des scores : ', self.list_score)
+			# Pas de calcul du score tant qu'on n'a pas recu le score des 2 joueurs
+			self.attendre_resultats = True
+			while self.attendre_resultats == True  :
+				print("attente du second score")
+				if len(self.list_score) >= 2 :
+					print("second score reçu !")
+					self.attendre_resultats = False
+			score_max = max(self.list_score)
+			if score_max == score :
+				client.send("Winner".encode())
+				print("Winner envoyé")
+			else :
+				client.send("Loser".encode())
+				print("Loser envoyé")
+		finally :
+			#self.list_score = []
+			self.list_pseudo = []
+			self.choix(client)
 		
-		self.list_score = []
-		self.list_pseudo = []
-		self.choix(client)
 
 	# Menu de choix
 	def choix(self,client) :
