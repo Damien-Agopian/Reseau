@@ -6,9 +6,6 @@ from random import *
 from  dico import *  # Les dictionnaires contenant les caractères japonais
 import sys
 
-"""
-Damien il faudrait enlever de la liste de joueurs les gens qui changent de fenêtre ou qui ferment l'application...
-"""
 
 class serveur():
 	def __init__(self) :
@@ -64,22 +61,23 @@ class serveur():
 		# On réinitialise :
 		self.joueur_score = []
 		self.list_joueur = []
-		#client.close()
-		#self.list_client.remove(client)
 		self.list_pseudo.remove(pseudo)
 		choix(self,client)
 		
 	# Gère les adversaires du mini-jeu 1V1
 	def multi_joueur(self,client) :
-		print ('hello')
+		
 		pseudo = client.recv(1024)  # Recoit le pseudo du joueur
 		pseudo = pseudo.decode()
 		print(pseudo)
+		
 		try :
 			self.list_pseudo.append(pseudo)
 		except : 
 			print('erreur dans la liste de pseudos')
+		
 		print("clients connectés : ", self.list_pseudo)
+		
 		if len(self.list_pseudo) == 1 :
 			client.send("attendre".encode())  # Attente d'un autre joueur
 			print("ordre d'attendre envoyé")
@@ -108,25 +106,19 @@ class serveur():
 			print('attente de réception du score')
 			score = client.recv(1024)  # Recoit le pseudo du joueur
 			score = score.decode()
-			print('score recu :', score)
 			self.list_score.append(score)
-			print('liste des scores : ', self.list_score)
 			# Pas de calcul du score tant qu'on n'a pas recu le score des 2 joueurs
 			self.attendre_resultats = True
 			while self.attendre_resultats == True  :
-				print("attente du second score")
 				if len(self.list_score) >= 2 :
 					print("second score reçu !")
 					self.attendre_resultats = False
 			score_max = max(self.list_score)
 			if score_max == score :
 				client.send("Winner".encode())
-				print("Winner envoyé")
 			else :
 				client.send("Loser".encode())
-				print("Loser envoyé")
 		finally :
-			#self.list_score = []
 			self.list_pseudo = []
 			self.choix(client)
 		
@@ -136,49 +128,40 @@ class serveur():
 		while True :
 			try :
 				rep = client.recv(1024)
-				print(rep)
 				if rep.decode() == "nouveauHiragana" :
 					solution = choice(hiragana_)
 					msg = hiragana2[solution]  # Envoi d'un nouveau hiragana
 					client.send(msg.encode())
-					print("Nouveau hiragana envoyé")
 					reponse = client.recv(1024).decode()
-					print(reponse)
 					if reponse != 'STOP':  # Le client change d'exercice
-						if reponse == solution :
+						if reponse == solution : #sinon on lui envoie la correction
 							client.send("VRAI".encode())
 						else :
-							client.send(solution.encode())
+							client.send(solution.encode()) 
 				if rep.decode() == "nouveauKatakana" :
 					solution = choice(katakana_)
 					msg = katakana2[solution]  # Envoi d'un nouveau katakana
 					client.send(msg.encode())
-					print("Nouveau katakana envoyé")
 					reponse = client.recv(1024).decode()
 					print(reponse)
 					if reponse != 'STOP':  # Le client change d'exercice
 						if reponse == solution :
 							client.send("VRAI".encode())
-						else :
+						else : 
 							client.send(solution.encode())
 				if rep.decode() == "nouveauSigne" :
 					solution = choice(lettre_)
 					msg = lettre_to_signe[solution]  # Envoit l'image du signe
 					client.send(msg.encode())
-					print("Nouveau signe envoyé")
 					reponse = client.recv(1024).decode()
-					print(reponse)
 					if reponse != 'STOP':  # Le client change d'exercice
 						if reponse == solution :
 							client.send("VRAI".encode())
 						else :
 							client.send(solution.encode())
 				if rep.decode() == "multi_hira" or rep.decode() == "multi_kata" or rep.decode() == "multi_LDS" :  # Mini-jeu multijoueur
-					print(rep.decode())
 					self.multi_joueur(client)
 				if rep.decode() == "score" :  # Lancer le calcul du score
-					print(rep.decode())
-					print("Score ?")
 					self.calcul_gagnant(client)
 				# Pour se déconnecter...
 				if rep.decode() == "DECONNECTION" or rep.decode() == "" :
