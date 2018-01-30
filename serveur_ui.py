@@ -6,6 +6,9 @@ from random import *
 from  dico import *  # Les dictionnaires contenant les caractères japonais
 import sys
 
+"""
+Damien il faudrait enlever de la liste de joueurs les gens qui changent de fenêtre ou qui ferment l'application...
+"""
 
 class serveur():
 	def __init__(self) :
@@ -72,11 +75,14 @@ class serveur():
 		pseudo = client.recv(1024)  # Recoit le pseudo du joueur
 		pseudo = pseudo.decode()
 		print(pseudo)
-		
-		self.list_pseudo.append(pseudo)
-		print(self.list_pseudo)
+		try :
+			self.list_pseudo.append(pseudo)
+		except : 
+			print('erreur dans la liste de pseudos')
+		print("clients connectés : ", self.list_pseudo)
 		if len(self.list_pseudo) == 1 :
 			client.send("attendre".encode())  # Attente d'un autre joueur
+			print("ordre d'attendre envoyé")
 			attendre = True
 			while attendre == True  :
 				if len(self.list_pseudo) >= 2 :
@@ -85,23 +91,29 @@ class serveur():
 			self.choix(client)
 			
 		elif len(self.list_pseudo) > 2 :  # Pas plus de deux joueurs
+			print("serveur plein")
 			client.send("serveur_plein".encode())
 			self.list_pseudo.remove('pseudo')
 			self.choix(client)
 			
 		else :  # Si tout est bon, commencer !
+			print("ordre de commencer !")
 			client.send("commencer".encode())
 			self.choix(client)
 			
 	# Compare les deux score pour donner un gagnant
 	def calcul_gagnant(self,client) :
+		print('attente de réception du score')
 		score = client.recv(1024)  # Recoit le pseudo du joueur
 		score = score.decode()
+		print('score recu :', score)
 		self.list_score.append(score)
 		# print(self.list_score)
 		# Pas de calcul du score tant qu'on n'a pas recu le score des 2 joueurs
 		while attendre == True  :
+			print("attente du second score")
 			if len(self.list_score) >= 2 :
+				print("second score reçu !")
 				attendre = False
 		score_max = max(self.list_score)
 		if score_max == score :
@@ -155,8 +167,8 @@ class serveur():
 							client.send("VRAI".encode())
 						else :
 							client.send(solution.encode())
-				if rep.decode() == "multi_hira" :  # Mini-jeu multijoueur
-					print (rep.decode())
+				if rep.decode() == "multi_hira" or rep.decode() == "multi_kata" or rep.decode() == "multi_LDS" :  # Mini-jeu multijoueur
+					print(rep.decode())
 					self.multi_joueur(client)
 				if rep.decode() == "score" :  # Lancer le calcul du score
 					print(rep.decode())
@@ -164,7 +176,7 @@ class serveur():
 					self.calcul_gagnant(client)
 				# Pour se déconnecter...
 				if rep.decode() == "DECONNECTION" or rep.decode() == "" :
-					"Fermeture de l'application"
+					print("Fermeture de l'application")
 					print("Déconnexion de ",client)
 					self.list_client.remove(client)
 					client.shutdown(0)
